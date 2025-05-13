@@ -3,199 +3,479 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Airforce DBMS - Dashboard</title>
+    <title>Airforce DBMS - Data Display</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #1a252f;
+        body { background-color: #1a252f; color: #fff; }
+        .navbar {
+            background-color: #0a3d62;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        .navbar-brand img {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            margin-right: 15px;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #fff !important;
+        }
+        .navbar-nav .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            margin-right: 20px;
+            transition: color 0.3s ease;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #87ceeb !important;
+        }
+        .dropdown-menu {
+            background-color: #0a3d62;
+            border: none;
+        }
+        .dropdown-item {
             color: #fff;
         }
-        .container {
-            margin-top: 100px;
+        .dropdown-item:hover {
+            background-color: #1a567a;
+            color: #87ceeb;
         }
-        .logo {
-            max-width: 200px;
-            height: auto;
-            display: block;
-            margin: 0 auto 20px;
-        }
-        h1, h2 {
-            text-align: center;
+        .tab-content {
+            margin-top: 20px;
         }
         table {
-            background-color: #232f3a;
-            border-radius: 8px;
-            border: 1px solid #2c3e50;
-            overflow: hidden;
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
         }
         th, td {
-            color: #ecf0f1;
-            padding: 12px 15px;
+            padding: 10px;
             text-align: left;
+            border: 1px solid #0a3d62;
         }
         th {
-            background-color: #2c3e50;
-            font-weight: bold;
+            background-color: #0a3d62;
         }
-        tr:nth-child(even) {
-            background-color: #34495e;
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            margin: 20px 0;
         }
-        tr:nth-child(odd) {
-            background-color: #232f3a;
-        }
-        tr:hover {
-            background-color: #16a085;
-        }
-        .table-container {
-            margin-bottom: 60px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        .table-responsive {
-            max-height: 400px;
-            overflow-y: auto;
+        .action-btn {
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+<nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/"><img src="images/logo.jpeg" alt="Airforce Logo" class="logo" style="height:40px;"> Airforce DBMS</a>
+        <a class="navbar-brand" href="/"><img src="/images/logo.jpeg" alt="Airforce Logo"> Airforce DBMS</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">Forms</a>
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Forms</a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/personnel.html">Personnel</a></li>
-                        <li><a class="dropdown-item" href="/missions.html">Missions</a></li>
-                        <li><a class="dropdown-item active" href="/security.html">Security</a></li>
-                        <li><a class="dropdown-item" href="/aircraft.html">Aircraft</a></li>
-                        <li><a class="dropdown-item" href="/logistics.html">Logistics</a></li>
+                        <li><a class="dropdown-item" href="/personnel.html" data-protected="true">Personnel</a></li>
+                        <li><a class="dropdown-item" href="/missions.html" data-protected="true">Missions</a></li>
+                        <li><a class="dropdown-item" href="/security.html" data-protected="true">Security</a></li>
+                        <li><a class="dropdown-item" href="/aircraft.html" data-protected="true">Aircraft</a></li>
+                        <li><a class="dropdown-item" href="/logistics.html" data-protected="true">Logistics</a></li>
                     </ul>
                 </li>
-                <li class="nav-item"><a class="nav-link" href="/display.html">Data Display</a></li>
-                
+                <li class="nav-item"><a class="nav-link active" href="/display.html" data-protected="true">Data Display</a></li>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Main Content -->
-<div class="container">
-    <img src="images/logo.jpeg" alt="Airforce Logo" class="logo">
-    <h1 class="mb-5">Airforce Database Management System</h1>
-
-    <!-- Personnel Table -->
-    <div class="table-container">
-        <h2>Personnel</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr id="personnelHead"></tr>
-                </thead>
-                <tbody id="personnelBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Missions Table -->
-    <div class="table-container">
-        <h2>Missions</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr id="missionsHead"></tr>
-                </thead>
-                <tbody id="missionsBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Security Table -->
-    <div class="table-container">
-        <h2>Security Records</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr id="securityHead"></tr>
-                </thead>
-                <tbody id="securityBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Logistics Table -->
-    <div class="table-container">
-        <h2>Logistics Records</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr id="logisticsHead"></tr>
-                </thead>
-                <tbody id="logisticsBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Aircraft Table -->
-    <div class="table-container">
-        <h2>Aircraft Records</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr id="aircraftHead"></tr>
-                </thead>
-                <tbody id="aircraftBody"></tbody>
-            </table>
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark">Enter Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="passwordInput" class="form-control" placeholder="Password">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="checkPassword()">Submit</button>
+            </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-// Helper function to populate tables
-function populateTable(apiEndpoint, headerId, bodyId) {
-    fetch(`/api/${apiEndpoint}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.length > 0) {
-                const headers = Object.keys(data[0]);
-                const headerElement = document.getElementById(headerId);
-                headerElement.innerHTML = ''; // Clear any existing headers
-                
-                headers.forEach(head => {
-                    headerElement.innerHTML += `<th>${head}</th>`;
-                });
+<!-- Personnel Promotion Modal -->
+<div class="modal fade" id="promoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark">Promote Personnel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="promoteForm">
+                    <input type="hidden" id="promotePersonnelID">
+                    <div class="mb-3">
+                        <label for="promoteRanks" class="form-label text-dark">Rank</label>
+                        <input type="text" class="form-control" id="promoteRanks" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="promoteSecurityClearance" class="form-label text-dark">Security Clearance</label>
+                        <input type="text" class="form-control" id="promoteSecurityClearance" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-                const bodyElement = document.getElementById(bodyId);
-                bodyElement.innerHTML = ''; // Clear any existing rows
-                
-                data.forEach(row => {
-                    let rowHTML = '<tr>';
-                    headers.forEach(head => {
-                        rowHTML += `<td>${row[head]}</td>`;
-                    });
-                    rowHTML += '</tr>';
-                    bodyElement.innerHTML += rowHTML;
-                });
-            }
-        })
-        .catch(err => console.error(`${apiEndpoint} fetch error:`, err));
+<!-- Aircraft Maintenance Modal -->
+<div class="modal fade" id="maintenanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark">Update Maintenance Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="maintenanceForm">
+                    <input type="hidden" id="maintenanceAircraftID">
+                    <div class="mb-3">
+                        <label for="maintenanceDate" class="form-label text-dark">Last Maintenance Date (YYYY-MM-DD)</label>
+                        <input type="text" class="form-control" id="maintenanceDate" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logistics Update Modal -->
+<div class="modal fade" id="logisticsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark">Update Logistics</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="logisticsForm">
+                    <input type="hidden" id="logisticsID">
+                    <div class="mb-3">
+                        <label for="stockLevel" class="form-label text-dark">Stock Level</label>
+                        <input type="number" class="form-control" id="stockLevel" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastRestocked" class="form-label text-dark">Last Restocked (YYYY-MM-DD)</label>
+                        <input type="text" class="form-control" id="lastRestocked" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="container mt-5 pt-5">
+    <ul class="nav nav-tabs" id="dataTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="personnel-tab" data-bs-toggle="tab" data-bs-target="#personnel" type="button" role="tab">Personnel</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="missions-tab" data-bs-toggle="tab" data-bs-target="#missions" type="button" role="tab">Missions</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab">Security</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="logistics-tab" data-bs-toggle="tab" data-bs-target="#logistics" type="button" role="tab">Logistics</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="aircraft-tab" data-bs-toggle="tab" data-bs-target="#aircraft" type="button" role="tab">Aircraft</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="dataTabContent">
+        <div class="tab-pane fade show active" id="personnel" role="tabpanel">
+            <h2>Personnel Details</h2>
+            <table id="personnelTable">
+                <thead><tr id="personnelHead"></tr></thead>
+                <tbody id="personnelBody"></tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="missions" role="tabpanel">
+            <h2>Missions Details</h2>
+            <table id="missionsTable">
+                <thead><tr id="missionsHead"></tr></thead>
+                <tbody id="missionsBody"></tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="security" role="tabpanel">
+            <h2>Security Details</h2>
+            <table id="securityTable">
+                <thead><tr id="securityHead"></tr></thead>
+                <tbody id="securityBody"></tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="logistics" role="tabpanel">
+            <h2>Logistics Details</h2>
+            <table id="logisticsTable">
+                <thead><tr id="logisticsHead"></tr></thead>
+                <tbody id="logisticsBody"></tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="aircraft" role="tabpanel">
+            <h2>Aircraft Details</h2>
+            <table id="aircraftTable">
+                <thead><tr id="aircraftHead"></tr></thead>
+                <tbody id="aircraftBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="error-message" class="error"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+const correctPassword = 'airforce123';
+
+function isAuthenticated() {
+    return localStorage.getItem('isAuthenticated') === 'true';
 }
 
-// Populate all tables when page loads
-document.addEventListener('DOMContentLoaded', function() {
+function setAuthenticated() {
+    localStorage.setItem('isAuthenticated', 'true');
+}
+
+function checkPassword() {
+    const input = document.getElementById('passwordInput').value;
+    if (input === correctPassword) {
+        setAuthenticated();
+        $('#loginModal').modal('hide');
+        fetchData();
+    } else {
+        alert('Incorrect password!');
+    }
+}
+
+document.querySelectorAll('[data-protected="true"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const redirectUrl = link.href;
+        localStorage.setItem('redirectUrl', redirectUrl);
+
+        if (!isAuthenticated()) {
+            $('#loginModal').modal('show');
+        } else {
+            window.location.href = redirectUrl;
+        }
+    });
+});
+
+function populateTable(endpoint, headId, bodyId) {
+    $.ajax({
+        url: `/api/${endpoint}`,
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${correctPassword}` },
+        success: function(data) {
+            const tbody = $(`#${bodyId}`);
+            const thead = $(`#${headId}`);
+            tbody.empty();
+            thead.empty();
+
+            if (data.length === 0) {
+                tbody.append('<tr><td colspan="8">No data available</td></tr>');
+            } else {
+                const headers = Object.keys(data[0]);
+                if (endpoint === 'personnel' || endpoint === 'aircraft' || endpoint === 'logistics') {
+                    headers.push('Actions');
+                }
+                headers.forEach(head => thead.append(`<th>${head}</th>`));
+
+                data.forEach(row => {
+                    let rowHtml = '<tr>';
+                    headers.forEach(h => {
+                        if (h === 'Actions') {
+                            if (endpoint === 'personnel') {
+                                rowHtml += `
+                                    <td>
+                                        <button class="btn btn-sm btn-primary action-btn" onclick="openPromoteModal(${row.PersonnelID}, '${row.Ranks}', '${row.SecurityClearance}')">Promote</button>
+                                        <button class="btn btn-sm btn-danger action-btn" onclick="retirePersonnel(${row.PersonnelID})">Retire</button>
+                                    </td>`;
+                            } else if (endpoint === 'aircraft') {
+                                rowHtml += `
+                                    <td>
+                                        <button class="btn btn-sm btn-primary action-btn" onclick="openMaintenanceModal(${row.AircraftID}, '${row.LastMaintenanceDate}')">Update Maintenance</button>
+                                    </td>`;
+                            } else if (endpoint === 'logistics') {
+                                rowHtml += `
+                                    <td>
+                                        <button class="btn btn-sm btn-primary action-btn" onclick="openLogisticsModal(${row.LogisticsID}, ${row.StockLevel}, '${row.LastRestocked}')">Update Stock</button>
+                                    </td>`;
+                            }
+                        } else {
+                            rowHtml += `<td>${row[h] ?? 'N/A'}</td>`;
+                        }
+                    });
+                    rowHtml += '</tr>';
+                    tbody.append(rowHtml);
+                });
+            }
+        },
+        error: function(err) {
+            $('#error-message').text(`Error fetching ${endpoint}: ${err.responseJSON?.error || 'Unknown error'}`);
+        }
+    });
+}
+
+function openPromoteModal(id, ranks, clearance) {
+    $('#promotePersonnelID').val(id);
+    $('#promoteRanks').val(ranks);
+    $('#promoteSecurityClearance').val(clearance);
+    $('#promoteModal').modal('show');
+}
+
+function openMaintenanceModal(id, date) {
+    $('#maintenanceAircraftID').val(id);
+    $('#maintenanceDate').val(date);
+    $('#maintenanceModal').modal('show');
+}
+
+function openLogisticsModal(id, stock, date) {
+    $('#logisticsID').val(id);
+    $('#stockLevel').val(stock);
+    $('#lastRestocked').val(date);
+    $('#logisticsModal').modal('show');
+}
+
+function retirePersonnel(id) {
+    if (confirm('Are you sure you want to retire this personnel?')) {
+        $.ajax({
+            url: `/api/personnel/${id}`,
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${correctPassword}` },
+            success: function(response) {
+                alert(response.message);
+                fetchData();
+            },
+            error: function(err) {
+                $('#error-message').text(`Error retiring personnel: ${err.responseJSON?.error || 'Unknown error'}`);
+            }
+        });
+    }
+}
+
+$('#promoteForm').submit(function(e) {
+    e.preventDefault();
+    const id = $('#promotePersonnelID').val();
+    $.ajax({
+        url: `/api/personnel/${id}`,
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${correctPassword}` },
+        data: JSON.stringify({
+            Ranks: $('#promoteRanks').val(),
+            SecurityClearance: $('#promoteSecurityClearance').val()
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            alert(response.message);
+            $('#promoteModal').modal('hide');
+            fetchData();
+        },
+        error: function(err) {
+            $('#error-message').text(`Error promoting personnel: ${err.responseJSON?.error || 'Unknown error'}`);
+        }
+    });
+});
+
+$('#maintenanceForm').submit(function(e) {
+    e.preventDefault();
+    const id = $('#maintenanceAircraftID').val();
+    $.ajax({
+        url: `/api/aircraft/${id}`,
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${correctPassword}` },
+        data: JSON.stringify({
+            LastMaintenanceDate: $('#maintenanceDate').val()
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            alert(response.message);
+            $('#maintenanceModal').modal('hide');
+            fetchData();
+        },
+        error: function(err) {
+            $('#error-message').text(`Error updating maintenance: ${err.responseJSON?.error || 'Unknown error'}`);
+        }
+    });
+});
+
+$('#logisticsForm').submit(function(e) {
+    e.preventDefault();
+    const id = $('#logisticsID').val();
+    $.ajax({
+        url: `/api/logistics/${id}`,
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${correctPassword}` },
+        data: JSON.stringify({
+            StockLevel: $('#stockLevel').val(),
+            LastRestocked: $('#lastRestocked').val()
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            alert(response.message);
+            $('#logisticsModal').modal('hide');
+            fetchData();
+        },
+        error: function(err) {
+            $('#error-message').text(`Error updating logistics: ${err.responseJSON?.error || 'Unknown error'}`);
+        }
+    });
+});
+
+function fetchData() {
     populateTable('personnel', 'personnelHead', 'personnelBody');
     populateTable('missions', 'missionsHead', 'missionsBody');
     populateTable('security', 'securityHead', 'securityBody');
     populateTable('logistics', 'logisticsHead', 'logisticsBody');
     populateTable('aircraft', 'aircraftHead', 'aircraftBody');
+}
+
+$(document).ready(() => {
+    if (isAuthenticated()) {
+        fetchData();
+    } else {
+        $('#loginModal').modal('show');
+    }
+
+    $('#loginModal').on('hidden.bs.modal', () => {
+        const redirectUrl = localStorage.getItem('redirectUrl');
+        if (isAuthenticated() && redirectUrl) {
+            window.location.href = redirectUrl;
+            localStorage.removeItem('redirectUrl');
+        }
+    });
 });
 </script>
+
 </body>
 </html>

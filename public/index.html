@@ -10,9 +10,8 @@
             background-color: #1a252f; 
             color: #fff; 
             margin: 0;
-            padding-bottom: 50px; /* Space for news ticker */
+            padding-bottom: 50px;
         }
-        /* Navbar (Same as Enhanced) */
         .navbar {
             background-color: #0a3d62;
             padding: 15px 20px;
@@ -51,14 +50,12 @@
             background-color: #1a567a;
             color: #87ceeb;
         }
-        /* Slideshow (Reverted to Original Style) */
         .carousel-item img {
-            height: 50000px;
-            width: 10000px;
-            object-fit: fill;
+            height: auto;
+            width: 100%;
+            object-fit: cover;
             max-height: 600px;
         }
-        /* News Ticker */
         .news-ticker {
             background: #dc3545;
             padding: 10px;
@@ -67,19 +64,52 @@
             text-align: center;
             font-weight: bold;
             font-size: 1.2rem;
-            position: fixed;
-            bottom: 0;
-            left: 0;
+            position: relative;
             z-index: 1000;
+            overflow: hidden;
         }
         .marquee {
             display: inline-block;
             white-space: nowrap;
-            animation: marquee 15s linear infinite;
+            animation: marquee 30s linear infinite;
+        }
+        .marquee:hover {
+            animation-play-state: paused;
         }
         @keyframes marquee {
             from { transform: translateX(100%); }
             to { transform: translateX(-100%); }
+        }
+        .news-section {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #2a3b47;
+            border-radius: 8px;
+        }
+        .news-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 1px solid #4a5b67;
+        }
+        .news-item h3 {
+            font-size: 1.3rem;
+            margin: 0 0 10px;
+        }
+        .news-item p {
+            margin: 5px 0;
+            color: #ccc;
+        }
+        .news-item a {
+            color: #87ceeb;
+            text-decoration: none;
+        }
+        .news-item a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            color: #ff6b6b;
+            text-align: center;
         }
     </style>
 </head>
@@ -103,7 +133,6 @@
                             <li><a class="dropdown-item" href="/logistics.html" data-protected="true">Logistics</a></li>
                             <li><a class="dropdown-item" href="/aircraft.html" data-protected="true">Aircraft</a></li>
                         </ul>
-                        
                     </li>
                     <li class="nav-item"><a class="nav-link" href="/display.html" data-protected="true">Data Display</a></li>
                 </ul>
@@ -135,11 +164,17 @@
                 <span class="visually-hidden">Next</span>
             </button>
         </div>
+
+        <!-- Detailed News Section -->
+        <div class="news-section">
+            <h2>Military News Updates</h2>
+            <div id="news-list"></div>
+        </div>
     </div>
 
     <!-- News Flash -->
     <div class="news-ticker">
-        <div class="marquee">Latest News: Airforce conducts successful test flight of new stealth jet! | Training program for pilots starts next month.</div>
+        <div class="marquee" id="news-marquee">Loading news...</div>
     </div>
 
     <!-- Login Modal -->
@@ -167,6 +202,7 @@
         function checkPassword() {
             const input = document.getElementById('passwordInput').value;
             if (input === correctPassword) {
+                localStorage.setItem('isAuthenticated', 'true');
                 window.location.href = localStorage.getItem('redirectUrl');
             } else {
                 alert('Incorrect password!');
@@ -179,6 +215,74 @@
                 $('#loginModal').modal('show');
             });
         });
+
+        const fallbackNews = [
+            {
+                title: "Operation Sindoor: Indian Air Force Strikes Pakistani Military Bases",
+                description: "Indian Air Force conducted precision strikes on Pakistani airbases during Operation Sindoor, targeting terror infrastructure in response to the Pahalgam attack.",
+                source: { name: "NDTV" },
+                url: "https://www.ndtv.com"
+            },
+            {
+                title: "India-Pakistan Ceasefire Announced After Intense Military Exchanges",
+                description: "A ceasefire was agreed upon after days of missile and drone attacks between India and Pakistan, mediated by the U.S.",
+                source: { name: "Reuters" },
+                url: "https://www.reuters.com"
+            },
+            {
+                title: "BrahMos Missiles Used in Strikes on Pakistani Air Bases",
+                description: "Indian forces reportedly used BrahMos missiles in precision strikes on Pakistani military targets, causing significant damage.",
+                source: { name: "The Indian Express" },
+                url: "https://indianexpress.com"
+            }
+        ];
+
+        const apiKey = 'f5735a346f0e4559b07c3d4598535ff2'; // Replace with your NewsAPI key
+        const url = `https://newsapi.org/v2/top-headlines?q=military&language=en&apiKey=${apiKey}`;
+
+        async function fetchNews() {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.status === 'ok' && data.articles.length > 0) {
+                    displayNews(data.articles);
+                } else {
+                    console.warn('No live news available from API, using fallback.');
+                    displayNews(fallbackNews);
+                    alert('No Live News Available Latest News Have been displayed');
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                displayNews(fallbackNews);
+                alert('Failed to load news from API. Showing recent military news instead. Please check your API key or internet connection.');
+            }
+        }
+
+        function displayNews(articles) {
+            const marquee = document.getElementById('news-marquee');
+            const newsText = articles
+                .slice(0, 5)
+                .map(article => article.title.substring(0, 100) + (article.title.length > 100 ? '...' : ''))
+                .join(' | ');
+            marquee.textContent = newsText || 'No military news available.';
+
+            const newsList = document.getElementById('news-list');
+            newsList.innerHTML = '';
+            articles.slice(0, 10).forEach(article => {
+                const newsItem = document.createElement('div');
+                newsItem.className = 'news-item';
+                newsItem.innerHTML = `
+                    <h3>${article.title}</h3>
+                    <p>${article.description || 'No description available.'}</p>
+                    <p><strong>Source:</strong> ${article.source.name}</p>
+                    <p><a href="${article.url}" target="_blank">Read full article</a></p>
+                `;
+                newsList.appendChild(newsItem);
+            });
+        }
+
+        fetchNews();
+        setInterval(fetchNews, 600000);
     </script>
 </body>
 </html>
