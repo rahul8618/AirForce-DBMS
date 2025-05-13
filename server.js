@@ -1,234 +1,305 @@
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
+const path = require('path');
 const app = express();
 
+// Middleware
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files
 
-// MySQL Connection Pool
+// Database connection
 const db = mysql.createPool({
     host: 'localhost',
-    user: 'root',
-    password: 'priya@1405', // MySQL password
+    user: 'root', // Replace with your MySQL username
+    password: 'Sachinten@123', // Replace with your MySQL password
     database: 'AirForceDB',
+    port: 3306, // Default MySQL port, change if different
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0,
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 0
+    queueLimit: 0
 });
 
-// Test connection
-db.getConnection((err, connection) => {
-    if (err) {
-        console.error('MySQL Connection Failed:', err);
-        return;
+// Test database connection on startup
+async function testConnection() {
+    try {
+        const [rows] = await db.query('SELECT 1');
+        console.log('Database connection successful:', rows);
+    } catch (error) {
+        console.error('Database connection failed:', error.message);
+        process.exit(1); // Exit if connection fails
     }
-    console.log('MySQL Connected');
-    connection.release();
-});
+}
+testConnection();
 
-// Handle connection errors
-db.on('error', (err) => {
-    console.error('MySQL Pool Error:', err);
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-        console.log('Reconnecting to MySQL...');
-    } else {
-        throw err;
+// Basic Authentication Middleware
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const correctPassword = 'airforce123';
+    if (!authHeader || authHeader !== `Bearer ${correctPassword}`) {
+        return res.status(401).json({ error: 'Unauthorized. Invalid or missing password.' });
+    }
+    next();
+};
+
+// GET: Fetch all Personnel
+app.get('/api/personnel', authenticate, async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM Personnel');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching personnel:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-
-// ------------------- Personnel Endpoints -------------------
-
-app.post('/api/personnel', (req, res) => {
-    const { Personnel_Name, Ranks, Roles, Unit, DateOfEnlistment, SecurityClearance, ContactInfo } = req.body;
-    console.log('Received personnel data:', req.body);
-
-    if (!Personnel_Name || !Ranks || !Roles || !DateOfEnlistment || !SecurityClearance) {
-        console.error('Missing required fields:', req.body);
-        res.status(400).send('Missing required fields');
-        return;
+// GET: Fetch all Aircraft
+app.get('/api/aircraft', authenticate, async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM Aircraft');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching aircraft:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const sql = `
-        INSERT INTO Personnel (Personnel_Name, Ranks, Roles, Unit, DateOfEnlistment, SecurityClearance, ContactInfo)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    db.query(sql, [Personnel_Name, Ranks, Roles, Unit, DateOfEnlistment, SecurityClearance, ContactInfo], (err, result) => {
-        if (err) {
-            console.error('Error inserting personnel:', err);
-            res.status(500).send(`Error inserting personnel: ${err.sqlMessage || err.message}`);
-            return;
-        }
-        res.status(200).send('Personnel added successfully');
-    });
 });
 
-app.get('/api/personnel', (req, res) => {
-    const sql = 'SELECT * FROM Personnel';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching personnel:', err);
-            res.status(500).send(`Error fetching personnel: ${err.sqlMessage || err.message}`);
-            return;
-        }
-        res.status(200).json(results);
-    });
-});
-
-// ------------------- Missions Endpoints -------------------
-
-app.post('/api/missions', (req, res) => {
-    const { MissionID, MissionName, Mission_Type, StartDate, EndDate } = req.body;
-    console.log('Received mission data:', req.body);
-
-    if (!MissionID || !MissionName || !Mission_Type || !StartDate) {
-        console.error('Missing required fields:', req.body);
-        res.status(400).send('Missing required fields');
-        return;
+// GET: Fetch all Missions
+app.get('/api/missions', authenticate, async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM Missions');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching missions:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const sql = `
-        INSERT INTO Missions (MissionID, MissionName, Mission_Type, StartDate, EndDate)
-        VALUES (?, ?, ?, ?, ?)
-    `;
-    db.query(sql, [MissionID, MissionName, Mission_Type, StartDate, EndDate], (err, result) => {
-        if (err) {
-            console.error('Error inserting mission:', err);
-            res.status(500).send(`Error inserting mission: ${err.sqlMessage || err.message}`);
-            return;
-        }
-        res.status(200).send('Mission added successfully');
-    });
 });
 
-app.get('/api/missions', (req, res) => {
-    const sql = 'SELECT * FROM Missions';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching missions:', err);
-            res.status(500).send(`Error fetching missions: ${err.sqlMessage || err.message}`);
-            return;
-        }
-        res.status(200).json(results);
-    });
+// GET: Fetch all Security
+app.get('/api/security', authenticate, async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM Security');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching security:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
-// ------------------- Aircraft Endpoints -------------------
+// GET: Fetch all Logistics
+app.get('/api/logistics', authenticate, async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM Logistics');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching logistics:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
-app.post('/api/aircraft', (req, res) => {
-    const { Model, AirCraft_Type, SerialNumber, AirCraft_Status, LastMaintenanceDate, AssignedBase, PilotID } = req.body;
-    console.log('Received aircraft data:', req.body);
+// 1. Update Personnel Rank and Security Clearance (Promotion)
+app.put('/api/personnel/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { Ranks, SecurityClearance } = req.body;
 
-    if (!Model || !AirCraft_Type || !SerialNumber || !AirCraft_Status) {
-        console.error('Missing required fields:', req.body);
-        res.status(400).send('Missing required fields');
-        return;
+    if (!Ranks || !SecurityClearance) {
+        return res.status(400).json({ error: 'Ranks and SecurityClearance are required' });
     }
 
-    const sql = `
-        INSERT INTO Aircraft (Model, AirCraft_Type, SerialNumber, AirCraft_Status, LastMaintenanceDate, AssignedBase, PilotID)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    db.query(sql, [Model, AirCraft_Type, SerialNumber, AirCraft_Status, LastMaintenanceDate, AssignedBase, PilotID || null], (err, result) => {
-        if (err) {
-            console.error('Error inserting aircraft:', err);
-            res.status(500).send(`Error inserting aircraft: ${err.sqlMessage || err.message}`);
-            return;
+    try {
+        const [result] = await db.execute(
+            'UPDATE Personnel SET Ranks = ?, SecurityClearance = ? WHERE PersonnelID = ?',
+            [Ranks, SecurityClearance, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Personnel not found' });
         }
-        res.status(200).send('Aircraft added successfully');
-    });
+
+        await db.execute(
+            'UPDATE Security SET ClearanceLevel = ? WHERE PersonnelID = ?',
+            [SecurityClearance, id]
+        );
+
+        res.json({ message: 'Personnel updated successfully' });
+    } catch (error) {
+        console.error('Error updating personnel:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
-app.get('/api/aircraft', (req, res) => {
-    const sql = 'SELECT * FROM Aircraft';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching aircraft:', err);
-            res.status(500).send(`Error fetching aircraft: ${err.sqlMessage || err.message}`);
-            return;
+// 2. Delete Personnel (Retirement)
+app.delete('/api/personnel/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await db.execute(
+            'DELETE FROM Personnel WHERE PersonnelID = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Personnel not found' });
         }
-        res.status(200).json(results);
-    });
+
+        res.json({ message: 'Personnel retired successfully' });
+    } catch (error) {
+        console.error('Error deleting personnel:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
-// ------------------- Logistics Endpoints -------------------
+// 3. Update Aircraft Maintenance Date
+app.put('/api/aircraft/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { LastMaintenanceDate } = req.body;
 
-app.post('/api/logistics', (req, res) => {
-    const { ItemName, Category, StockLevel, LastRestocked, Supplier } = req.body;
-    console.log('Received logistics data:', req.body);
-
-    if (!ItemName || !Category || StockLevel === undefined) {
-        console.error('Missing required fields:', req.body);
-        res.status(400).send('Missing required fields');
-        return;
+    if (!LastMaintenanceDate) {
+        return res.status(400).json({ error: 'LastMaintenanceDate is required' });
     }
 
-    const sql = `
-        INSERT INTO Logistics (ItemName, Category, StockLevel, LastRestocked, Supplier)
-        VALUES (?, ?, ?, ?, ?)
-    `;
-    db.query(sql, [ItemName, Category, StockLevel, LastRestocked, Supplier], (err, result) => {
-        if (err) {
-            console.error('Error inserting logistics item:', err);
-            res.status(500).send(`Error inserting logistics: ${err.sqlMessage || err.message}`);
-            return;
-        }
-        res.status(200).send('Logistics item added successfully');
-    });
-});
-
-app.get('/api/logistics', (req, res) => {
-    const sql = 'SELECT * FROM Logistics';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching logistics:', err);
-            res.status(500).send(`Error fetching logistics: ${err.sqlMessage || err.message}`);
-            return;
-        }
-        res.status(200).json(results);
-    });
-});
-
-// ------------------- Security Endpoints -------------------
-
-app.post('/api/security', (req, res) => {
-    const { PersonnelID, ClearanceLevel, AccessAreas } = req.body;
-    console.log('Received security data:', req.body);
-
-    if (!PersonnelID || !ClearanceLevel) {
-        console.error('Missing required fields:', req.body);
-        res.status(400).send('Missing required fields');
-        return;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(LastMaintenanceDate)) {
+        return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
-    const sql = `
-        INSERT INTO Security (PersonnelID, ClearanceLevel, AccessAreas)
-        VALUES (?, ?, ?)
-    `;
-    db.query(sql, [PersonnelID, ClearanceLevel, AccessAreas], (err, result) => {
-        if (err) {
-            console.error('Error inserting security clearance:', err);
-            res.status(500).send(`Error inserting security clearance: ${err.sqlMessage || err.message}`);
-            return;
+    try {
+        const [result] = await db.execute(
+            'UPDATE Aircraft SET LastMaintenanceDate = ? WHERE AircraftID = ?',
+            [LastMaintenanceDate, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Aircraft not found' });
         }
-        res.status(200).send('Security clearance added successfully');
-    });
+
+        res.json({ message: 'Aircraft maintenance updated successfully' });
+    } catch (error) {
+        console.error('Error updating aircraft:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
-app.get('/api/security', (req, res) => {
-    const sql = 'SELECT * FROM Security';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching security records:', err);
-            res.status(500).send(`Error fetching security: ${err.sqlMessage || err.message}`);
-            return;
+// 4. Delete Aircraft (Damage)
+app.delete('/api/aircraft/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await db.execute(
+            'DELETE FROM Aircraft WHERE AircraftID = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Aircraft not found' });
         }
-        res.status(200).json(results);
-    });
+
+        res.json({ message: 'Aircraft deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting aircraft:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
-// ------------------- Server Start -------------------
+// 5. Update Mission Start Date or End Date
+app.put('/api/missions/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { Start_Date, End_Date } = req.body;
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+    if (!Start_Date && !End_Date) {
+        return res.status(400).json({ error: 'At least one of Start_Date or End_Date is required' });
+    }
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (Start_Date && !dateRegex.test(Start_Date)) {
+        return res.status(400).json({ error: 'Invalid Start_Date format. Use YYYY-MM-DD' });
+    }
+    if (End_Date && !dateRegex.test(End_Date)) {
+        return res.status(400).json({ error: 'Invalid End_Date format. Use YYYY-MM-DD' });
+    }
+
+    try {
+        const [result] = await db.execute(
+            'UPDATE Missions SET Start_Date = COALESCE(?, Start_Date), End_Date = COALESCE(?, End_Date) WHERE MissionID = ?',
+            [Start_Date || null, End_Date || null, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Mission not found' });
+        }
+
+        res.json({ message: 'Mission updated successfully' });
+    } catch (error) {
+        console.error('Error updating mission:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// 6. Delete Mission (Cancelled)
+app.delete('/api/missions/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await db.execute(
+            'DELETE FROM Missions WHERE MissionID = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Mission not found' });
+        }
+
+        res.json({ message: 'Mission deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting mission:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// 7. Update Logistics Stock Level and LastRestocked
+app.put('/api/logistics/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { StockLevel, LastRestocked } = req.body;
+
+    if (!StockLevel || !LastRestocked) {
+        return res.status(400).json({ error: 'StockLevel and LastRestocked are required' });
+    }
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(LastRestocked)) {
+        return res.status(400).json({ error: 'Invalid LastRestocked format. Use YYYY-MM-DD' });
+    }
+
+    try {
+        // Verify table and columns exist
+        const [columns] = await db.execute("SHOW COLUMNS FROM Logistics");
+        const columnNames = columns.map(col => col.Field);
+        if (!columnNames.includes('StockLevel') || !columnNames.includes('LastRestocked') || !columnNames.includes('LogisticsID')) {
+            return res.status(400).json({ error: 'Invalid table schema. Required columns: LogisticsID, StockLevel, LastRestocked' });
+        }
+
+        const [result] = await db.execute(
+            'UPDATE Logistics SET StockLevel = ?, LastRestocked = ? WHERE LogisticsID = ?',
+            [StockLevel, LastRestocked, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Logistics entry not found' });
+        }
+
+        res.json({ message: 'Logistics updated successfully' });
+    } catch (error) {
+        console.error('Error updating logistics:', error.message, error.stack);
+        res.status(500).json({ error: `Internal server error: ${error.message}` });
+    }
+});
+
+// Serve index.html for root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
